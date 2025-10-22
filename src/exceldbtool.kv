@@ -1,0 +1,71 @@
+<ExcelDBToolLayout>:
+    orientation: 'vertical'
+    padding: 10
+    spacing: 5
+
+    # DB 접속 정보 입력
+    BoxLayout:
+        size_hint_y: None
+        height: 180
+        orientation: 'vertical'
+        
+        Label:
+            text: 'DB 접속 정보'
+            font_name: 'KoreanFont'
+            size_hint_y: None
+            height: 30
+        
+        TextInput:
+            id: db_host
+            hint_text: '호스트 (예: localhost)'
+            font_name: 'KoreanFont'
+        TextInput:
+            id: db_user
+            hint_text: '사용자명 (예: root)'
+            font_name: 'KoreanFont'
+        TextInput:
+            id: db_pass
+            hint_text: '비밀번호'
+            font_name: 'KoreanFont'
+            password: True  # 비밀번호 가리기
+        TextInput:
+            id: db_name
+            hint_text: 'DB명'
+            font_name: 'KoreanFont'
+
+    # 파일 및 테이블 정보
+    BoxLayout:
+        size_hint_y: None
+        height: 120
+        orientation: 'vertical'
+        
+        Label:
+            text: '파일 및 테이블 정보'
+            font_name: 'KoreanFont'
+            size_hint_y: None
+            height: 30
+            
+        TextInput:
+            id: file_path
+            hint_text: '업로드할 파일 경로'
+            font_name: 'KoreanFont'
+        TextInput:
+            id: table_name
+            hint_text: '테이블명'
+            font_name: 'KoreanFont'
+
+    # 실행 버튼
+    Button:
+        id: upload_button
+        text: '업로드 시작'
+        font_name: 'KoreanFont'
+        size_hint_y: None
+        height: 40
+        on_press: root.start_upload()
+
+    # 상태 메시지
+    Label:
+        id: status_label
+        text: '대기 중...'
+        font_name: 'KoreanFont'
+        size_hint: 1, 1
