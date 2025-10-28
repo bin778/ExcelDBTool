@@ -9,20 +9,23 @@ class DbUploader:
     self.engine = None
     try:
       connection_string = (
-        f"mysql+mysqlconnector://{db_info['user']}:{db_info['password']}"
+        f"mysql+pymysql://{db_info['user']}:{db_info['password']}"
         f"@{db_info['host']}:{db_info.get('port', 3306)}/{db_info['db_name']}"
-        f"?local_infile=1"
+        f"?local_infile=1&charset=utf8mb4"
       )
+      
       self.engine = create_engine(connection_string)
       
       with self.engine.connect() as conn:
-        print("[DbUploader] DB 연결 성공")
+        print("[DbUploader] DB 연결 성공 (pymysql 드라이버)")
         
     except SQLAlchemyError as e:
       print(f"[DbUploader] DB 연결 실패: {e}")
+      if "No module named 'PyMySQL'" in str(e):
+        raise ImportError("PyMySQL 드라이버가 설치되지 않았습니다. (pip install PyMySQL)")
       raise ConnectionError(f"DB 연결 실패: {e}")
     except ImportError:
-      raise ImportError("MySQL 드라이버(mysql-connector-python)가 설치되지 않았습니다.")
+      raise ImportError("PyMySQL 드라이버(pip install PyMySQL)가 설치되지 않았습니다.")
 
   def run_upload(self, progress_callback):
     filepath = self.db_info['file_path']
@@ -35,7 +38,12 @@ class DbUploader:
 
     try:
       if filepath.lower().endswith('.csv'):
-        file_iterator = pd.read_csv(filepath, chunksize=chunk_size)
+        try:
+          file_iterator = pd.read_csv(filepath, chunksize=chunk_size, encoding='utf-8')
+        except UnicodeDecodeError:
+          print("[DbUploader] UTF-8 읽기 실패. CP949(EUC-KR)로 재시도...")
+          file_iterator = pd.read_csv(filepath, chunksize=chunk_size, encoding='cp949')
+          
       elif filepath.lower().endswith(('.xlsx', '.xlsm')):
         file_iterator = pd.read_excel(filepath, chunksize=chunk_size, engine='openpyxl')
       else:
@@ -59,6 +67,7 @@ class DbUploader:
           query = f"""
             LOAD DATA LOCAL INFILE '{absolute_path}'
             INTO TABLE {table_name}
+            CHARACTER SET utf8mb4 
             FIELDS TERMINATED BY ',' ENCLOSED BY '"'
             LINES TERMINATED BY '\\n'
           """
