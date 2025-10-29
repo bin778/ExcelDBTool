@@ -6,19 +6,23 @@
     # DB 접속 정보 입력
     BoxLayout:
         size_hint_y: None
-        height: 180
+        height: 300
         orientation: 'vertical'
         
         Label:
             text: 'DB 접속 정보'
             font_name: 'KoreanFont'
             size_hint_y: None
-            height: 30
-        
+            height: 40
         TextInput:
             id: db_host
             hint_text: '호스트 (예: localhost)'
             font_name: 'KoreanFont'
+        TextInput:
+            id: db_port
+            hint_text: '포트 (기본값: 3306)'
+            font_name: 'KoreanFont'
+            input_filter: 'int'
         TextInput:
             id: db_user
             hint_text: '사용자명 (예: root)'
@@ -36,14 +40,14 @@
     # 파일 및 테이블 정보
     BoxLayout:
         size_hint_y: None
-        height: 120
+        height: 140
         orientation: 'vertical'
         
         Label:
             text: '파일 및 테이블 정보'
             font_name: 'KoreanFont'
             size_hint_y: None
-            height: 30
+            height: 40
             
         TextInput:
             id: file_path
@@ -60,7 +64,7 @@
         text: '업로드 시작'
         font_name: 'KoreanFont'
         size_hint_y: None
-        height: 40
+        height: 60
         on_press: root.start_upload()
 
     # 상태 메시지

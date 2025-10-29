@@ -54,7 +54,8 @@ class ExcelDBToolLayout(BoxLayout):
       'password': self.ids.db_pass.text,
       'db_name': self.ids.db_name.text,
       'file_path': self.ids.file_path.text,
-      'table_name': self.ids.table_name.text
+      'table_name': self.ids.table_name.text,
+      'port': self.ids.db_port.text
     }
     
     print(f"UI 입력값: {db_info}")
