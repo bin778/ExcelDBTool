@@ -80,6 +80,42 @@ class DbUploader:
     except Exception as e:
       raise Exception(f"테이블 자동 생성 실패: {e}")
 
+  def _process_chunk(self, chunk, table_name, chunk_index, total_rows_so_far, progress_callback):
+    chunk_start_time = time.time()
+    temp_csv_path = "temp_chunk_for_load.csv"
+    chunk.to_csv(temp_csv_path, index=False, header=False, encoding='utf-8')
+
+    try:
+      with self.engine.connect() as connection:
+        absolute_path = os.path.abspath(temp_csv_path)
+        absolute_path = absolute_path.replace(os.path.sep, '/')
+        
+        sanitized_columns = [self._sanitize_column_name(col) for col in chunk.columns]
+        columns_sql = f"({', '.join(sanitized_columns)})"
+        
+        query = f"""
+          LOAD DATA LOCAL INFILE '{absolute_path}'
+          INTO TABLE `{table_name}`
+          CHARACTER SET utf8mb4 
+          FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+          LINES TERMINATED BY '\\n'
+          {columns_sql}
+        """
+        connection.execute(text(query))
+        connection.commit()
+        
+    except SQLAlchemyError as e:
+      raise Exception(f"DB 삽입 오류 (청크 #{chunk_index+1}): {e}")
+    finally:
+      if os.path.exists(temp_csv_path):
+        os.remove(temp_csv_path)
+
+    total_rows = total_rows_so_far + len(chunk)
+    chunk_time = time.time() - chunk_start_time
+    
+    progress_message = f"청크 #{chunk_index+1} ({len(chunk)} 행) 삽입 완료... (누적: {total_rows} 행, {chunk_time:.2f}초)"
+    progress_callback(progress_message)
+    return total_rows
 
   def run_upload(self, progress_callback):
     filepath = self.db_info['file_path']
@@ -91,62 +127,56 @@ class DbUploader:
       raise Exception(f"테이블 준비 실패: {e}")
 
     chunk_size = 10000
-    total_rows = 0
+    total_rows_processed = 0
 
     print(f"[DbUploader] '{filepath}' 파일 처리 시작...")
 
     try:
       if filepath.lower().endswith('.csv'):
+        print("[DbUploader] CSV 스트리밍 모드(O(1) 메모리)로 처리합니다.")
         try:
           file_iterator = pd.read_csv(filepath, chunksize=chunk_size, encoding='utf-8', header=0)
         except UnicodeDecodeError:
           print("[DbUploader] UTF-8 읽기 실패. CP949(EUC-KR)로 재시도...")
           file_iterator = pd.read_csv(filepath, chunksize=chunk_size, encoding='cp949', header=0)
-          
+        
+        for i, chunk in enumerate(file_iterator):
+          total_rows_processed = self._process_chunk(
+            chunk, table_name, i, total_rows_processed, progress_callback
+          )
+
       elif filepath.lower().endswith(('.xlsx', '.xlsm')):
-        file_iterator = pd.read_excel(filepath, chunksize=chunk_size, engine='openpyxl', header=0)
+        print(f"[DbUploader] Excel 모드(O(N) 메모리)로 처리합니다. 파일 전체를 로드합니다...")
+        progress_callback("Excel 파일 전체를 메모리로 읽는 중...")
+        
+        df_full = pd.read_excel(filepath, engine='openpyxl', header=0)
+        total_rows_in_file = len(df_full)
+        
+        if total_rows_in_file == 0:
+            return f"'{table_name}' 테이블에 업로드 완료. (파일이 비어있음)"
+
+        print(f"[DbUploader] 파일 로드 완료. 총 {total_rows_in_file} 행. 수동 청크 처리 시작...")
+
+        num_chunks = (total_rows_in_file // chunk_size) + (1 if total_rows_in_file % chunk_size > 0 else 0)
+        
+        for i in range(num_chunks):
+            start_index = i * chunk_size
+            end_index = min((i + 1) * chunk_size, total_rows_in_file)
+            chunk = df_full.iloc[start_index:end_index]
+            
+            total_rows_processed = self._process_chunk(
+              chunk, table_name, i, total_rows_processed, progress_callback
+            )
+            
       else:
         raise ValueError("지원하지 않는 파일 형식입니다 (.csv, .xlsx, .xlsm만 지원)")
+
     except FileNotFoundError:
       raise FileNotFoundError(f"파일을 찾을 수 없습니다: {filepath}")
     except Exception as e:
-      raise Exception(f"파일 읽기 오류: {e}")
+      if "DB 삽입 오류" not in str(e):
+        raise Exception(f"파일 읽기/처리 오류: {e}")
+      else:
+        raise e
 
-    for i, chunk in enumerate(file_iterator):
-      chunk_start_time = time.time()
-      
-      temp_csv_path = "temp_chunk_for_load.csv"
-      chunk.to_csv(temp_csv_path, index=False, header=False, encoding='utf-8')
-
-      try:
-        with self.engine.connect() as connection:
-          absolute_path = os.path.abspath(temp_csv_path)
-          absolute_path = absolute_path.replace(os.path.sep, '/')
-          
-          sanitized_columns = [self._sanitize_column_name(col) for col in chunk.columns]
-          columns_sql = f"({', '.join(sanitized_columns)})"
-          
-          query = f"""
-            LOAD DATA LOCAL INFILE '{absolute_path}'
-            INTO TABLE `{table_name}`
-            CHARACTER SET utf8mb4 
-            FIELDS TERMINATED BY ',' ENCLOSED BY '"'
-            LINES TERMINATED BY '\\n'
-            {columns_sql}
-          """
-          connection.execute(text(query))
-          connection.commit()
-          
-      except SQLAlchemyError as e:
-        raise Exception(f"DB 삽입 오류 (청크 #{i+1}): {e}")
-      finally:
-        if os.path.exists(temp_csv_path):
-          os.remove(temp_csv_path)
-
-      total_rows += len(chunk)
-      chunk_time = time.time() - chunk_start_time
-      
-      progress_message = f"청크 #{i+1} ({len(chunk)} 행) 삽입 완료... (누적: {total_rows} 행, {chunk_time:.2f}초)"
-      progress_callback(progress_message)
-
-    return f"총 {total_rows} 행을 '{table_name}' 테이블에 업로드 완료!"
+    return f"총 {total_rows_processed} 행을 '{table_name}' 테이블에 업로드 완료!"

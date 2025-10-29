@@ -3,12 +3,11 @@
     padding: 10
     spacing: 5
 
-    # DB 접속 정보 입력
     BoxLayout:
         size_hint_y: None
         height: 300
         orientation: 'vertical'
-        
+        # TODO: 탭을 누르면 다음 입력창으로 넘어가기
         Label:
             text: 'DB 접속 정보'
             font_name: 'KoreanFont'
@@ -31,13 +30,12 @@
             id: db_pass
             hint_text: '비밀번호'
             font_name: 'KoreanFont'
-            password: True  # 비밀번호 가리기
+            password: True
         TextInput:
             id: db_name
             hint_text: 'DB명'
             font_name: 'KoreanFont'
 
-    # 파일 및 테이블 정보
     BoxLayout:
         size_hint_y: None
         height: 140
@@ -48,17 +46,24 @@
             font_name: 'KoreanFont'
             size_hint_y: None
             height: 40
-            
-        TextInput:
-            id: file_path
-            hint_text: '업로드할 파일 경로'
-            font_name: 'KoreanFont'
+        BoxLayout:
+            size_hint_y: None
+            height: 40
+            Label:
+                id: file_path_label
+                text: '파일을 선택하세요...'
+                font_name: 'KoreanFont'
+                size_hint_x: 0.7
+            Button:
+                text: '파일 선택'
+                font_name: 'KoreanFont'
+                size_hint_x: 0.3
+                on_press: root.show_file_chooser_popup()
         TextInput:
             id: table_name
             hint_text: '테이블명'
             font_name: 'KoreanFont'
 
-    # 실행 버튼
     Button:
         id: upload_button
         text: '업로드 시작'
@@ -66,8 +71,6 @@
         size_hint_y: None
         height: 60
         on_press: root.start_upload()
-
-    # 상태 메시지
     Label:
         id: status_label
         text: '대기 중...'
