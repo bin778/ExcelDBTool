@@ -73,17 +73,20 @@
 ## 4. 설치 및 실행 방법 (Installation)
 
 ```bash
-# 1. 가상환경 생성 및 활성화
+# 1. 가상환경 생성 및 활성화(의존성 문제로 3.13 까지만 가능)
 python -m venv venv
 source venv/bin/activate # (macOS/Linux)
 .\venv\Scripts\activate # (Windows CMD)
 
 # 2. 필요 라이브러리 설치
-pip install kivy pandas openpyxl sqlalchemy mysql-connector-python
+pip install kivy pandas openpyxl sqlalchemy pymysql mysql-connector-python
 
 # 3. 프로그램 실행
 python src/main.py # (macOS/Linux)
 python src\main.py # (Windows CMD)
+
+# 4. MySQL 설정
+SET GLOBAL local_infile = 'ON'; # `local_infile` 시스템 변수를 `ON`으로 설정 필수!
 ```
 
 _(추후 업데이트 예정)_
