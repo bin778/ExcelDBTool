@@ -75,14 +75,15 @@
 ```bash
 # 1. 가상환경 생성 및 활성화
 python -m venv venv
-source venv/bin/activate  # (macOS/Linux)
-.\venv\Scripts\activate  # (Windows)
+source venv/bin/activate # (macOS/Linux)
+.\venv\Scripts\activate # (Windows CMD)
 
 # 2. 필요 라이브러리 설치
 pip install kivy pandas openpyxl sqlalchemy mysql-connector-python
 
 # 3. 프로그램 실행
-python main.py
+python src/main.py # (macOS/Linux)
+python src\main.py # (Windows CMD)
 ```
 
 _(추후 업데이트 예정)_
