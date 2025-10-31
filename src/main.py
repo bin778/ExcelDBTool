@@ -47,7 +47,7 @@ class ExcelDBToolLayout(BoxLayout):
     if not self._popup:
       home_dir = os.path.expanduser('~')
       
-      # TODO: 한글 자음 및 모음 분리 문제 해결하기
+      # TODO: 한글 자음 및 모음 분리 문제 해결하기(macOS 한정)
       chooser = FileChooserListView(
         path=home_dir,
         filters=['*.csv', '*.xlsx', '*.xlsm'],

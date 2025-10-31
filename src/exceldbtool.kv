@@ -7,7 +7,7 @@
         size_hint_y: None
         height: 300
         orientation: 'vertical'
-        # TODO: 탭을 누르면 다음 입력창으로 넘어가기
+        
         Label:
             text: 'DB 접속 정보'
             font_name: 'KoreanFont'
@@ -17,24 +17,29 @@
             id: db_host
             hint_text: '호스트 (예: localhost)'
             font_name: 'KoreanFont'
+            write_tab: False
         TextInput:
             id: db_port
             hint_text: '포트 (기본값: 3306)'
             font_name: 'KoreanFont'
             input_filter: 'int'
+            write_tab: False
         TextInput:
             id: db_user
             hint_text: '사용자명 (예: root)'
             font_name: 'KoreanFont'
+            write_tab: False
         TextInput:
             id: db_pass
             hint_text: '비밀번호'
             font_name: 'KoreanFont'
             password: True
+            write_tab: False
         TextInput:
             id: db_name
             hint_text: 'DB명'
             font_name: 'KoreanFont'
+            write_tab: False
 
     BoxLayout:
         size_hint_y: None
@@ -63,6 +68,7 @@
             id: table_name
             hint_text: '테이블명'
             font_name: 'KoreanFont'
+            write_tab: False
 
     Button:
         id: upload_button
