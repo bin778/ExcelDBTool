@@ -2,12 +2,10 @@
     orientation: 'vertical'
     padding: 10
     spacing: 5
-
     BoxLayout:
         size_hint_y: None
         height: 300
         orientation: 'vertical'
-        
         Label:
             text: 'DB 접속 정보'
             font_name: 'KoreanFont'
@@ -40,12 +38,10 @@
             hint_text: 'DB명'
             font_name: 'KoreanFont'
             write_tab: False
-
     BoxLayout:
         size_hint_y: None
         height: 140
         orientation: 'vertical'
-        
         Label:
             text: '파일 및 테이블 정보'
             font_name: 'KoreanFont'
@@ -69,14 +65,21 @@
             hint_text: '테이블명'
             font_name: 'KoreanFont'
             write_tab: False
-
-    Button:
-        id: upload_button
-        text: '업로드 시작'
-        font_name: 'KoreanFont'
+    BoxLayout:
         size_hint_y: None
         height: 60
-        on_press: root.start_upload()
+        spacing: 5
+        Button:
+            id: upload_button
+            text: '파일 -> DB 업로드'
+            font_name: 'KoreanFont'
+            on_press: root.start_upload()
+            
+        Button:
+            id: download_button
+            text: 'DB -> CSV 다운로드'
+            font_name: 'KoreanFont'
+            on_press: root.show_file_save_popup()
     Label:
         id: status_label
         text: '대기 중...'
