@@ -89,4 +89,6 @@ python src\main.py # (Windows CMD)
 SET GLOBAL local_infile = 'ON'; # `local_infile` 시스템 변수를 `ON`으로 설정 필수!
 ```
 
+> 다만, macOS에서는 한글 파일명을 처리하는 방식이 다르기 때문에 한글 자소분리가 발생할 수 있다. 이를 해결하려면 NFC 파일명 변환 파이썬 스크립트를 작성한 뒤 Automator에 등록하여, '빠른 동작' 실행해 자소분리 문제를 해결하는 것이 좋다!
+
 _(추후 업데이트 예정)_
